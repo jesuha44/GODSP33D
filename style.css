@@ -1,33 +1,66 @@
 body, html {
   margin: 0;
   padding: 0;
-  overflow: hidden;
   background: black;
+  overflow: hidden;
   font-family: Arial, sans-serif;
   color: white;
   height: 100vh;
   width: 100vw;
 }
 
-#lightning-canvas {
-  position: absolute;
-  top: 0;
-  left: 0;
-  z-index: 999;
-  animation: flickerScreen 1s infinite;
+#lightning-screen {
+  width: 100%;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  animation: fadeOut 2s ease-out forwards;
 }
 
-@keyframes flickerScreen {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.97; }
-  80% { opacity: 1; }
+#svg-bolt {
+  width: 160px;
+  height: 320px;
+  stroke: #00f6ff;
+  stroke-width: 6;
+  fill: none;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+  stroke-dasharray: 1000;
+  stroke-dashoffset: 1000;
+  animation: draw 0.5s ease-out forwards, glow 0.5s infinite alternate;
+  filter: drop-shadow(0 0 15px #00f6ff) drop-shadow(0 0 35px #00f6ff);
+}
+
+@keyframes draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes glow {
+  0% {
+    stroke: #00f6ff;
+    filter: drop-shadow(0 0 15px #00f6ff);
+  }
+  100% {
+    stroke: #0ff;
+    filter: drop-shadow(0 0 25px #0ff);
+  }
+}
+
+@keyframes fadeOut {
+  0% { opacity: 1; }
+  85% { opacity: 1; }
+  100% { opacity: 0; display: none; }
+}
+
+.hidden {
+  display: none;
 }
 
 #main-content {
   display: none;
   text-align: center;
   padding-top: 30vh;
-  z-index: 1;
-  position: relative;
 }
-
