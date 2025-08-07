@@ -3,24 +3,35 @@ body {
   padding: 0;
   background: black;
   color: white;
-  font-family: Arial;
+  font-family: Arial, sans-serif;
   text-align: center;
 }
 
-#lightning-container {
+#lightning-screen {
   width: 100%;
   height: 100vh;
   background-color: black;
-  background-image: url('https://i.imgur.com/UmzJZQh.gif'); /* Replace with your own gif if needed */
-  background-size: cover;
-  background-position: center;
-  animation: flash 1.5s forwards;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  animation: flashOut 1.2s ease-out forwards;
 }
 
-@keyframes flash {
+#lightning {
+  opacity: 0;
+  animation: strike 0.3s ease-in-out forwards;
+}
+
+@keyframes strike {
+  0% { opacity: 0; transform: scaleY(0.2); }
+  50% { opacity: 1; transform: scaleY(1.1); }
+  100% { opacity: 0; transform: scaleY(1); }
+}
+
+@keyframes flashOut {
   0% { opacity: 1; }
-  80% { opacity: 0; }
-  100% { display: none; }
+  80% { opacity: 0.5; }
+  100% { opacity: 0; display: none; }
 }
 
 .hidden {
