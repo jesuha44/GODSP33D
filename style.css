@@ -25,13 +25,13 @@ body, html {
   stroke: #00f6ff;
   stroke-width: 8;
   fill: none;
-  stroke-linejoin: round;
+  stroke-linejoin: bevel;
   stroke-linecap: round;
   stroke-dasharray: 3000;
   stroke-dashoffset: 3000;
   animation:
-    draw 0.8s ease-out forwards,
-    glow 0.6s infinite alternate;
+    draw 0.7s ease-out forwards,
+    glow 0.5s infinite alternate;
   filter: drop-shadow(0 0 15px #00f6ff) drop-shadow(0 0 35px #00f6ff);
 }
 
@@ -48,7 +48,7 @@ body, html {
   }
   100% {
     stroke: #0ff;
-    filter: drop-shadow(0 0 25px #0ff);
+    filter: drop-shadow(0 0 30px #0ff);
   }
 }
 
@@ -69,5 +69,4 @@ body, html {
   z-index: 1;
   position: relative;
 }
-
 
