@@ -1,13 +1,24 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Lightning Strike</title>
-  <link rel="stylesheet" href="style.css" />
+  <meta charset="UTF-8">
+  <title>Custom Lightning Animation</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <div id="flash-overlay"></div>
-  <canvas id="lightningCanvas"></canvas>
+  <div id="lightning-screen">
+    <svg id="lightning-svg" viewBox="0 0 100 300" preserveAspectRatio="xMidYMid meet">
+      <polyline 
+        id="bolt"
+        points="50,0 60,60 45,100 70,170 50,210 65,270"
+        fill="none" 
+        stroke="#00ffff" 
+        stroke-width="5" 
+        stroke-linejoin="round" 
+        stroke-linecap="round"
+      />
+    </svg>
+  </div>
 
   <div id="main-content" class="hidden">
     <h1>Welcome to the Site ⚡</h1>
