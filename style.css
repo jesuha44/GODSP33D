@@ -14,6 +14,13 @@ body, html {
   top: 0;
   left: 0;
   z-index: 999;
+  animation: flickerScreen 1s infinite;
+}
+
+@keyframes flickerScreen {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.97; }
+  80% { opacity: 1; }
 }
 
 #main-content {
