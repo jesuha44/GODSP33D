@@ -8,7 +8,7 @@
     :root{
       --intro-bg:#0a0c18;
       --intro-bg-2:#141b3a;
-      --flash-color:#ffffff;        /* white screen flash */
+      --flash-color:#ffffff;        /* white flash */
       --flash-cyan:#7fd9ff;         /* cyan flash */
       --flash-blue:#2a4bff;         /* deep blue flash */
       --bolt-core:#ffffff;          /* hot core */
@@ -18,9 +18,12 @@
 
     html,body{ height:100%; margin:0; background:#0b0e12; color:#e7ecf3; font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial,sans-serif; }
 
-    .intro-overlay{ position:fixed; inset:0; z-index:var(--overlay-z);
+    /* Intro overlay */
+    .intro-overlay{
+      position:fixed; inset:0; z-index:var(--overlay-z);
       background: radial-gradient(120% 100% at 70% 20%, var(--intro-bg-2) 0%, var(--intro-bg) 55%, #06070f 100%);
-      display:grid; place-items:center; overflow:hidden; }
+      display:grid; place-items:center; overflow:hidden;
+    }
     .intro-overlay[hidden]{ display:none; }
 
     .stage{ position:relative; width:100vw; height:100vh; }
@@ -31,7 +34,7 @@
     #flashC{ background:var(--flash-cyan); }
     #flashB{ background:var(--flash-blue); }
 
-    /* Skip button */
+    /* Skip */
     .skip{
       position:absolute; right:16px; top:16px; z-index:2; background:#10131a; color:#cfe9ff; border:1px solid #284157;
       padding:8px 12px; border-radius:999px; font-size:14px; cursor:pointer; opacity:.85; transition:.2s;
@@ -70,22 +73,19 @@
 
       <svg id="boltSvg" width="100%" height="100%" viewBox="0 0 1000 1000" preserveAspectRatio="none">
         <defs>
-          <!-- Glow stack: a little heavier for cinema feel -->
+          <!-- Glow -->
           <filter id="glow" x="-60%" y="-60%" width="220%" height="220%">
             <feGaussianBlur in="SourceGraphic" stdDeviation="2.5" result="b1"/>
             <feGaussianBlur in="SourceGraphic" stdDeviation="7" result="b2"/>
             <feGaussianBlur in="SourceGraphic" stdDeviation="16" result="b3"/>
             <feMerge>
-              <feMergeNode in="b3"/>
-              <feMergeNode in="b2"/>
-              <feMergeNode in="b1"/>
-              <feMergeNode in="SourceGraphic"/>
+              <feMergeNode in="b3"/><feMergeNode in="b2"/><feMergeNode in="b1"/><feMergeNode in="SourceGraphic"/>
             </feMerge>
           </filter>
 
-          <!-- Faceted blue gradient (logo vibe) -->
+          <!-- Faceted blue gradient -->
           <linearGradient id="boltGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stop-color="#8be4ff"/>
+            <stop offset="0%"  stop-color="#8be4ff"/>
             <stop offset="45%" stop-color="#49b9ff"/>
             <stop offset="100%" stop-color="#2273ff"/>
           </linearGradient>
@@ -94,29 +94,22 @@
           <filter id="electricNoise" x="-20%" y="-20%" width="140%" height="140%">
             <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="13" stitchTiles="stitch" result="turb"/>
             <feColorMatrix type="saturate" values="0"/>
-            <feComponentTransfer>
-              <feFuncA type="table" tableValues="0 0.75"/>
-            </feComponentTransfer>
+            <feComponentTransfer><feFuncA type="table" tableValues="0 0.75"/></feComponentTransfer>
           </filter>
         </defs>
 
-        <!-- ===== ZIG-ZAG BOLT (top-right -> bottom-left) ===== -->
-        <!-- This is straight segments (L) for crisp angles -->
-        <!-- Keep all three in sync by sharing the same 'd' -->
+        <!-- ===== Bolt group ===== -->
         <g id="bolt" filter="url(#glow)">
-          <!-- Outline (black then white) -->
+          <!-- Outlines -->
           <path id="outlineOuter" fill="none" stroke="#000" stroke-width="16" stroke-linecap="round" stroke-linejoin="round" opacity=".9"/>
           <path id="outlineInner" fill="none" stroke="#ffffff" stroke-width="11" stroke-linecap="round" stroke-linejoin="round" opacity=".95"/>
-
-          <!-- Cyan/blue corona + white hot core (with chromatic offsets) -->
-          <path id="corona" fill="none" stroke="url(#boltGrad)" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" opacity="0.9"/>
-          <path id="core"   fill="none" stroke="var(--bolt-core)" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
-
-          <!-- Chromatic sizzle: brief colored core ghosts -->
+          <!-- Corona + core -->
+          <path id="corona"  fill="none" stroke="url(#boltGrad)" stroke-width="8"  stroke-linecap="round" stroke-linejoin="round" opacity="0.9"/>
+          <path id="core"    fill="none" stroke="var(--bolt-core)" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
+          <!-- Chromatic ghosts -->
           <path id="coreCyan" fill="none" stroke="#7fd9ff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" opacity="0"/>
           <path id="coreBlue" fill="none" stroke="#2a4bff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" opacity="0"/>
-
-          <!-- Container for auto-generated branches -->
+          <!-- Branch container -->
           <g id="branches" stroke-linecap="round" stroke-linejoin="round"></g>
 
           <!-- Stars & shards -->
@@ -148,21 +141,20 @@
 
   <audio id="thunderAudio" preload="auto"></audio>
 
+  <!-- GSAP -->
   <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
   <script>
   (function(){
     const overlay  = document.getElementById('intro');
     const site     = document.getElementById('site');
-    const svg      = document.getElementById('boltSvg');
-
     const flashW   = document.getElementById('flashW');
     const flashC   = document.getElementById('flashC');
     const flashB   = document.getElementById('flashB');
 
-    const core     = document.getElementById('core');
-    const corona   = document.getElementById('corona');
     const outlineO = document.getElementById('outlineOuter');
     const outlineI = document.getElementById('outlineInner');
+    const corona   = document.getElementById('corona');
+    const core     = document.getElementById('core');
     const coreCyan = document.getElementById('coreCyan');
     const coreBlue = document.getElementById('coreBlue');
     const branchesG= document.getElementById('branches');
@@ -172,7 +164,6 @@
 
     const ONCE_PER_SESSION = true;
     const STORAGE_KEY = 'cinematicLightningShown';
-
     if(ONCE_PER_SESSION && sessionStorage.getItem(STORAGE_KEY)){
       overlay.setAttribute('hidden','true');
       site.classList.add('ready');
@@ -182,48 +173,89 @@
     skipBtn.addEventListener('click', endIntroNow);
     document.addEventListener('keydown', e => { if(e.key==='Escape') endIntroNow(); });
 
-    // === 1) Define a SHARP ZIGZAG path (edit points to tweak angles) ===
-    const points = [
-      [960,  70],  // start (top-right)
-      [840, 150],
-      [905, 235],
-      [740, 315],
-      [815, 405],
-      [640, 490],
-      [710, 575],
-      [520, 655],
-      [595, 735],
-      [380, 815],
-      [455, 900],
-      [160, 960]   // end (bottom-left)
-    ];
+    /* ========= RANDOM ZIGZAG GENERATION =========
+       Tune these if you want a different vibe later. */
+    const CHAOS = 0.55;       // 0.0 (straight) -> 1.0 (wild)
+    const MIN_SEGS = 5;       // min corners
+    const MAX_SEGS = 7;       // max corners
+    const BRANCH_COUNT = 1;   // branches per corner (0–2)
+    const BRANCH_LEN = [14,28];
+    const VIEW_W = 1000, VIEW_H = 1000;
+
+    function rand(a,b){ return a + Math.random()*(b-a); }
+
+    function buildPoints(){
+      const segs = Math.round(rand(MIN_SEGS, MAX_SEGS));
+      const start = [rand(880,960), rand(40,120)];     // top-right
+      const end   = [rand(80,200),  rand(880,960)];    // bottom-left
+
+      const dxTotal = end[0]-start[0];
+      const dyTotal = end[1]-start[1];
+
+      const xs = [], ys = [];
+      let xAccum = 0, yAccum = 0;
+
+      for(let i=0;i<segs;i++){
+        const t = (i===segs-1)? 1 : rand(0.12,0.22);
+        const longBoost = (i%2===0? rand(1.15,1.4) : rand(0.75,0.95));
+        const jx = t * longBoost * dxTotal / (segs - i);
+        const jy = t * longBoost * dyTotal / (segs - i);
+
+        const wobbleX = CHAOS * rand(-70, 70);
+        const wobbleY = CHAOS * rand(-25, 25);
+        const vx = jx + wobbleX;
+        const vy = jy + wobbleY;
+
+        xAccum += vx; yAccum += vy;
+        xs.push(xAccum); ys.push(yAccum);
+      }
+
+      const pts = [start];
+      for(let i=0;i<xs.length;i++){
+        const last = pts[pts.length-1];
+        pts.push([ last[0] + xs[i], last[1] + ys[i] ]);
+      }
+      pts[pts.length-1] = end;
+
+      return pts.map(([x,y])=>[
+        Math.max(0, Math.min(VIEW_W, x)),
+        Math.max(0, Math.min(VIEW_H, y))
+      ]);
+    }
+
+    const points = buildPoints();
     const d = 'M ' + points.map((p,i)=> (i? 'L ':'') + p[0]+' '+p[1]).join(' ');
     [outlineO, outlineI, corona, core, coreCyan, coreBlue].forEach(p => p.setAttribute('d', d));
 
-    // === 2) Auto-generate short branches at each corner ===
+    // Branches
     function makeBranches(){
       branchesG.innerHTML = '';
       for(let i=1;i<points.length-1;i++){
-        const [x,y] = points[i];
-        const dir = (i%2===0) ? -1 : 1;       // alternate side
-        const len = 18 + (i%3)*6;             // slightly varied length
-        const ang = (i%2? -55:45) * (Math.PI/180);
-        const x2 = x + Math.cos(ang)*len*dir;
-        const y2 = y + Math.sin(ang)*len*dir;
+        for(let k=0;k<BRANCH_COUNT;k++){
+          if(Math.random() < 0.75){
+            const x = points[i][0], y = points[i][1];
+            const dir = (Math.random() < 0.5 ? -1 : 1);
+            const len = rand(BRANCH_LEN[0], BRANCH_LEN[1]) * (0.6 + 0.8*CHAOS);
+            const angDeg = (i%2 ? rand(40,65) : rand(-65,-40));
+            const ang = angDeg * (Math.PI/180);
+            const x2 = x + Math.cos(ang)*len*dir;
+            const y2 = y + Math.sin(ang)*len*dir;
 
-        const path = document.createElementNS('http://www.w3.org/2000/svg','path');
-        path.setAttribute('d', `M ${x} ${y} L ${x2} ${y2}`);
-        path.setAttribute('fill','none');
-        path.setAttribute('stroke','url(#boltGrad)');
-        path.setAttribute('stroke-width','3');
-        path.setAttribute('class','branch');
-        branchesG.appendChild(path);
+            const path = document.createElementNS('http://www.w3.org/2000/svg','path');
+            path.setAttribute('d', `M ${x} ${y} L ${x2} ${y2}`);
+            path.setAttribute('fill','none');
+            path.setAttribute('stroke','url(#boltGrad)');
+            path.setAttribute('stroke-width','3');
+            path.setAttribute('class','branch');
+            branchesG.appendChild(path);
+          }
+        }
       }
     }
     makeBranches();
     const branches = Array.from(branchesG.querySelectorAll('.branch'));
 
-    // === 3) Prep stroke drawing ===
+    // Prep strokes
     function prepPath(path){
       const len = path.getTotalLength();
       path.style.strokeDasharray = `${len} ${len}`;
@@ -231,16 +263,16 @@
       return len;
     }
     [outlineO, outlineI, corona, core, coreCyan, coreBlue].forEach(prepPath);
-    const branchLens = branches.map(prepPath);
+    branches.forEach(prepPath);
 
-    // === 4) Timeline ===
-    const tl = gsap.timeline({ defaults:{ ease:'power3.out' }});
+    // Timeline
     gsap.set('#noise', { opacity:0.02 });
+    const tl = gsap.timeline({ defaults:{ ease:'power3.out' }});
 
     // Anticipation
     tl.to('.stage', { x:-2, y:-2, duration:0.08, ease:'power2.inOut' }, 0);
 
-    // Color pre-flash stack
+    // Color pre-flash
     tl.to(flashB, { opacity:0.10, duration:0.05, ease:'power2.out' }, 0.02)
       .to(flashB, { opacity:0, duration:0.12, ease:'power2.in' }, ">-0.02")
       .to(flashC, { opacity:0.12, duration:0.05 }, 0.06)
@@ -258,7 +290,7 @@
       tl.to(b, { strokeDashoffset:0, duration:0.10 + i*0.02, ease:'power1.in' }, 'strike+=0.05');
     });
 
-    // Screen flashes + camera shake
+    // Flashes + camera shake
     tl.to(flashW, { opacity:0.98, duration:0.06, ease:'power4.out' }, 'strike+=0.02')
       .to('.stage', { x:0, y:0, duration:0.05, ease:'power1.in' }, 'strike+=0.03')
       .to('.stage', { x:6, y:-4, duration:0.06, ease:'power1.inOut' }, 'strike+=0.06')
@@ -267,30 +299,30 @@
       .to([flashC, flashB], { opacity:0.30, duration:0.14 }, 'strike+=0.12')
       .to([flashW, flashC, flashB], { opacity:0.0, duration:0.30, ease:'power2.in' }, 'strike+=0.26');
 
-    // Chromatic sizzle (brief colored core ghosts)
-    tl.set(coreCyan, { opacity:0, x:1.2, y:-0.8 }, 'strike+=0.00')
+    // Chromatic sizzle ghosts
+    tl.set(coreCyan, { opacity:0, x:1.2,  y:-0.8 }, 'strike+=0.00')
       .set(coreBlue, { opacity:0, x:-1.2, y:0.8 }, 'strike+=0.00')
       .to(coreCyan, { strokeDashoffset:0, opacity:0.9, duration:0.10, ease:'power1.in' }, 'strike+=0.02')
       .to(coreBlue, { strokeDashoffset:0, opacity:0.8, duration:0.10, ease:'power1.in' }, 'strike+=0.03')
       .to([coreCyan, coreBlue], { opacity:0, duration:0.22, ease:'power1.out' }, 'strike+=0.18');
 
-    // Stars & shards
+    // Stars / shards
     tl.to('#stars', { opacity:1, duration:0.08, ease:'power1.out' }, 'strike+=0.05')
       .to('#stars', { opacity:0, duration:0.40 }, 'strike+=0.32')
       .to('#shards', { opacity:1, duration:0.06 }, 'strike+=0.06')
       .to('#shards', { opacity:0, duration:0.35 }, 'strike+=0.34');
 
-    // Linger + decay
+    // Decay
     tl.to([core,corona,outlineI,outlineO], { opacity:0.92, duration:0.05 }, 'strike+=0.02')
       .to([core,corona], { opacity:0.65, duration:0.08 }, 'strike+=0.18')
       .to([core,corona], { opacity:0.95, duration:0.05 }, 'strike+=0.26')
       .to([core,corona,outlineI,outlineO], { opacity:0.0, duration:0.40, ease:'power2.in' }, 'strike+=0.52')
       .to('#noise', { opacity:0.02, duration:0.5 }, 'strike+=0.34');
 
-    // Thunder (optional audio asset)
+    // Optional thunder
     tl.call(()=>{ try{ if(thunder && thunder.play) thunder.play().catch(()=>{}); }catch(e){} }, null, 'strike+=0.30');
 
-    // Fade overlay & reveal site
+    // Reveal site
     tl.call(()=>{
       overlay.style.transition = `opacity var(--fade-duration) ease`;
       overlay.style.opacity = 0;
@@ -301,7 +333,7 @@
       }, 900);
     }, null, ">+0.15");
 
-    // Safety reveal
+    // Safety fallback
     setTimeout(()=>{
       if(!overlay.hasAttribute('hidden')){
         overlay.setAttribute('hidden','true');
@@ -317,7 +349,7 @@
       if(ONCE_PER_SESSION) sessionStorage.setItem(STORAGE_KEY, '1');
     }
 
-    // Subtle shimmer loop
+    // Shimmer loop
     gsap.to('#noise', { opacity:0.045, duration:1.2, yoyo:true, repeat:-1, ease:'sine.inOut' });
   })();
   </script>
