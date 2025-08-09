@@ -1,81 +1,325 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Cinematic Lightning Intro - Zigzag</title>
-<style>
-  :root{
-    --intro-bg:#0a0c18;
-    --intro-bg-2:#141b3a;
-    --flash-color:#ffffff;
-    --bolt-color:#bfe8ff;
-    --bolt-core:#ffffff;
-    --glow-outer:#6fd0ff;
-    --fade-duration:900ms;
-    --overlay-z: 9999;
-  }
-  html,body{ height:100%; margin:0; background:#0b0e12; color:#e7ecf3; font-family:sans-serif; }
-  .intro-overlay{ position:fixed; inset:0; z-index:var(--overlay-z); background: radial-gradient(120% 100% at 70% 20%, var(--intro-bg-2) 0%, var(--intro-bg) 50%, #06070f 100%); display:grid; place-items:center; overflow:hidden; }
-  .intro-overlay[hidden]{ display:none; }
-  .stage{ position:relative; width:100vw; height:100vh; }
-  .flash{ position:absolute; inset:0; background:var(--flash-color); opacity:0; pointer-events:none; mix-blend-mode:screen; }
-  .site{ opacity:0; transform:scale(0.985); transition:opacity .5s ease, transform .6s ease; }
-  .site.ready{ opacity:1; transform:none; }
-</style>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Cinematic Lightning Intro</title>
+  <style>
+    :root{
+      --intro-bg:#0a0c18;
+      --intro-bg-2:#141b3a;
+      --flash-color:#ffffff;        /* white screen flash */
+      --flash-cyan:#7fd9ff;         /* cyan flash */
+      --flash-blue:#2a4bff;         /* deep blue flash */
+      --bolt-core:#ffffff;          /* hot core */
+      --fade-duration:900ms;
+      --overlay-z: 9999;
+    }
+
+    html,body{ height:100%; margin:0; background:#0b0e12; color:#e7ecf3; font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial,sans-serif; }
+
+    .intro-overlay{ position:fixed; inset:0; z-index:var(--overlay-z);
+      background: radial-gradient(120% 100% at 70% 20%, var(--intro-bg-2) 0%, var(--intro-bg) 55%, #06070f 100%);
+      display:grid; place-items:center; overflow:hidden; }
+    .intro-overlay[hidden]{ display:none; }
+
+    .stage{ position:relative; width:100vw; height:100vh; }
+
+    /* Flash layers (stacked for color richness) */
+    .flash{ position:absolute; inset:0; opacity:0; pointer-events:none; mix-blend-mode:screen; }
+    #flashW{ background:var(--flash-color); }
+    #flashC{ background:var(--flash-cyan); }
+    #flashB{ background:var(--flash-blue); }
+
+    /* Skip button */
+    .skip{
+      position:absolute; right:16px; top:16px; z-index:2; background:#10131a; color:#cfe9ff; border:1px solid #284157;
+      padding:8px 12px; border-radius:999px; font-size:14px; cursor:pointer; opacity:.85; transition:.2s;
+    }
+    .skip:hover{ opacity:1; transform:translateY(-1px); }
+
+    /* Site reveal */
+    .site{ opacity:0; transform:scale(0.985); transition:opacity .5s ease, transform .6s ease; }
+    .site.ready{ opacity:1; transform:none; }
+
+    /* Reduced motion */
+    @media (prefers-reduced-motion: reduce){
+      .intro-overlay{ display:none !important; }
+      .site{ opacity:1 !important; transform:none !important; }
+    }
+
+    /* Vignette */
+    .vignette:before{
+      content:""; position:absolute; inset:-12%; pointer-events:none;
+      background: radial-gradient(ellipse at center, rgba(0,0,0,0) 38%, rgba(0,0,0,.70) 100%);
+      mix-blend-mode:multiply; opacity:.95;
+    }
+  </style>
 </head>
 <body>
-<div class="intro-overlay" id="intro">
-  <div class="stage">
-    <div class="flash" id="flash"></div>
-    <svg id="boltSvg" width="100%" height="100%" viewBox="0 0 1000 1000" preserveAspectRatio="none">
-      <defs>
-        <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
-          <feGaussianBlur in="SourceGraphic" stdDeviation="2.5" result="b1"/>
-          <feGaussianBlur in="SourceGraphic" stdDeviation="6" result="b2"/>
-          <feGaussianBlur in="SourceGraphic" stdDeviation="14" result="b3"/>
-          <feMerge>
-            <feMergeNode in="b3"/><feMergeNode in="b2"/><feMergeNode in="b1"/><feMergeNode in="SourceGraphic"/>
-          </feMerge>
-        </filter>
-        <linearGradient id="boltGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stop-color="#8be4ff"/>
-          <stop offset="45%" stop-color="#49b9ff"/>
-          <stop offset="100%" stop-color="#2273ff"/>
-        </linearGradient>
-      </defs>
-      <g id="bolt" filter="url(#glow)">
-        <path id="outlineOuter" d="M 960 40 L 700 200 L 850 350 L 500 500 L 650 650 L 300 800 L 140 940" fill="none" stroke="#000" stroke-width="14" stroke-linecap="round" stroke-linejoin="round" />
-        <path id="outlineInner" d="M 960 40 L 700 200 L 850 350 L 500 500 L 650 650 L 300 800 L 140 940" fill="none" stroke="#fff" stroke-width="10" stroke-linecap="round" stroke-linejoin="round" />
-        <path id="corona" d="M 960 40 L 700 200 L 850 350 L 500 500 L 650 650 L 300 800 L 140 940" fill="none" stroke="url(#boltGrad)" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" />
-        <path id="core" d="M 960 40 L 700 200 L 850 350 L 500 500 L 650 650 L 300 800 L 140 940" fill="none" stroke="var(--bolt-core)" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" />
-      </g>
-    </svg>
+
+  <!-- Intro Overlay -->
+  <div class="intro-overlay" id="intro" aria-hidden="true">
+    <div class="stage vignette">
+      <button class="skip" id="skipIntro" aria-label="Skip intro">Skip</button>
+
+      <!-- Flash stack -->
+      <div class="flash" id="flashB"></div>
+      <div class="flash" id="flashC"></div>
+      <div class="flash" id="flashW"></div>
+
+      <svg id="boltSvg" width="100%" height="100%" viewBox="0 0 1000 1000" preserveAspectRatio="none">
+        <defs>
+          <!-- Glow stack: a little heavier for cinema feel -->
+          <filter id="glow" x="-60%" y="-60%" width="220%" height="220%">
+            <feGaussianBlur in="SourceGraphic" stdDeviation="2.5" result="b1"/>
+            <feGaussianBlur in="SourceGraphic" stdDeviation="7" result="b2"/>
+            <feGaussianBlur in="SourceGraphic" stdDeviation="16" result="b3"/>
+            <feMerge>
+              <feMergeNode in="b3"/>
+              <feMergeNode in="b2"/>
+              <feMergeNode in="b1"/>
+              <feMergeNode in="SourceGraphic"/>
+            </feMerge>
+          </filter>
+
+          <!-- Faceted blue gradient (logo vibe) -->
+          <linearGradient id="boltGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#8be4ff"/>
+            <stop offset="45%" stop-color="#49b9ff"/>
+            <stop offset="100%" stop-color="#2273ff"/>
+          </linearGradient>
+
+          <!-- Noise shimmer -->
+          <filter id="electricNoise" x="-20%" y="-20%" width="140%" height="140%">
+            <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="13" stitchTiles="stitch" result="turb"/>
+            <feColorMatrix type="saturate" values="0"/>
+            <feComponentTransfer>
+              <feFuncA type="table" tableValues="0 0.75"/>
+            </feComponentTransfer>
+          </filter>
+        </defs>
+
+        <!-- ===== ZIG-ZAG BOLT (top-right -> bottom-left) ===== -->
+        <!-- This is straight segments (L) for crisp angles -->
+        <!-- Keep all three in sync by sharing the same 'd' -->
+        <g id="bolt" filter="url(#glow)">
+          <!-- Outline (black then white) -->
+          <path id="outlineOuter" fill="none" stroke="#000" stroke-width="16" stroke-linecap="round" stroke-linejoin="round" opacity=".9"/>
+          <path id="outlineInner" fill="none" stroke="#ffffff" stroke-width="11" stroke-linecap="round" stroke-linejoin="round" opacity=".95"/>
+
+          <!-- Cyan/blue corona + white hot core (with chromatic offsets) -->
+          <path id="corona" fill="none" stroke="url(#boltGrad)" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" opacity="0.9"/>
+          <path id="core"   fill="none" stroke="var(--bolt-core)" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
+
+          <!-- Chromatic sizzle: brief colored core ghosts -->
+          <path id="coreCyan" fill="none" stroke="#7fd9ff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" opacity="0"/>
+          <path id="coreBlue" fill="none" stroke="#2a4bff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" opacity="0"/>
+
+          <!-- Container for auto-generated branches -->
+          <g id="branches" stroke-linecap="round" stroke-linejoin="round"></g>
+
+          <!-- Stars & shards -->
+          <g id="stars" fill="#ffffff" opacity="0.0">
+            <polygon points="780,210 786,213 780,216 777,222 774,216 768,213 774,210 777,204"/>
+            <polygon points="540,460 544,462 540,465 538,469 536,465 532,462 536,460 538,456"/>
+            <polygon points="300,700 304,702 300,705 298,709 296,705 292,702 296,700 298,696"/>
+          </g>
+          <g id="shards" stroke="#ffffff" stroke-width="2" opacity="0.0">
+            <line x1="760" y1="220" x2="746" y2="228"/>
+            <line x1="620" y1="390" x2="610" y2="402"/>
+            <line x1="430" y1="560" x2="418" y2="570"/>
+          </g>
+        </g>
+
+        <!-- Shimmer noise -->
+        <rect class="noise" id="noise" x="0" y="0" width="1000" height="1000" filter="url(#electricNoise)"/>
+      </svg>
+    </div>
   </div>
-</div>
-<main class="site" id="site">
-  <h1>Website Content</h1>
-</main>
-<script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
-<script>
-(function(){
-  const overlay = document.getElementById('intro');
-  const site = document.getElementById('site');
-  const flash = document.getElementById('flash');
-  const core = document.getElementById('core');
-  const corona = document.getElementById('corona');
-  const outlineOuter = document.getElementById('outlineOuter');
-  const outlineInner = document.getElementById('outlineInner');
-  function prep(path){ let len=path.getTotalLength(); path.style.strokeDasharray=len; path.style.strokeDashoffset=len; }
-  [core,corona,outlineOuter,outlineInner].forEach(prep);
-  const tl = gsap.timeline();
-  tl.to(flash,{opacity:0.15,duration:0.05})
-    .to(flash,{opacity:0,duration:0.1})
-    .to([outlineOuter,outlineInner,corona,core],{strokeDashoffset:0,duration:0.4,stagger:0.05},">")
-    .to(flash,{opacity:0.9,duration:0.05},"<")
-    .to(flash,{opacity:0,duration:0.3})
-    .call(()=>{ overlay.style.opacity=0; setTimeout(()=>{ overlay.hidden=true; site.classList.add('ready'); },900); });
-})();
-</script>
+
+  <!-- Your site -->
+  <main class="site" id="site">
+    <section style="max-width:960px; margin:10vh auto; padding:24px; background:#0f131a; border:1px solid #1d2633; border-radius:16px; box-shadow:0 20px 60px rgba(0,0,0,.35)">
+      <h1 style="margin:0 0 8px 0; font-size:42px; letter-spacing:.3px;">Your Website</h1>
+      <p style="opacity:.85; line-height:1.6">The intro runs once per session, then reveals your page.</p>
+    </section>
+  </main>
+
+  <audio id="thunderAudio" preload="auto"></audio>
+
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+  <script>
+  (function(){
+    const overlay  = document.getElementById('intro');
+    const site     = document.getElementById('site');
+    const svg      = document.getElementById('boltSvg');
+
+    const flashW   = document.getElementById('flashW');
+    const flashC   = document.getElementById('flashC');
+    const flashB   = document.getElementById('flashB');
+
+    const core     = document.getElementById('core');
+    const corona   = document.getElementById('corona');
+    const outlineO = document.getElementById('outlineOuter');
+    const outlineI = document.getElementById('outlineInner');
+    const coreCyan = document.getElementById('coreCyan');
+    const coreBlue = document.getElementById('coreBlue');
+    const branchesG= document.getElementById('branches');
+
+    const skipBtn  = document.getElementById('skipIntro');
+    const thunder  = document.getElementById('thunderAudio');
+
+    const ONCE_PER_SESSION = true;
+    const STORAGE_KEY = 'cinematicLightningShown';
+
+    if(ONCE_PER_SESSION && sessionStorage.getItem(STORAGE_KEY)){
+      overlay.setAttribute('hidden','true');
+      site.classList.add('ready');
+      return;
+    }
+
+    skipBtn.addEventListener('click', endIntroNow);
+    document.addEventListener('keydown', e => { if(e.key==='Escape') endIntroNow(); });
+
+    // === 1) Define a SHARP ZIGZAG path (edit points to tweak angles) ===
+    const points = [
+      [960,  70],  // start (top-right)
+      [840, 150],
+      [905, 235],
+      [740, 315],
+      [815, 405],
+      [640, 490],
+      [710, 575],
+      [520, 655],
+      [595, 735],
+      [380, 815],
+      [455, 900],
+      [160, 960]   // end (bottom-left)
+    ];
+    const d = 'M ' + points.map((p,i)=> (i? 'L ':'') + p[0]+' '+p[1]).join(' ');
+    [outlineO, outlineI, corona, core, coreCyan, coreBlue].forEach(p => p.setAttribute('d', d));
+
+    // === 2) Auto-generate short branches at each corner ===
+    function makeBranches(){
+      branchesG.innerHTML = '';
+      for(let i=1;i<points.length-1;i++){
+        const [x,y] = points[i];
+        const dir = (i%2===0) ? -1 : 1;       // alternate side
+        const len = 18 + (i%3)*6;             // slightly varied length
+        const ang = (i%2? -55:45) * (Math.PI/180);
+        const x2 = x + Math.cos(ang)*len*dir;
+        const y2 = y + Math.sin(ang)*len*dir;
+
+        const path = document.createElementNS('http://www.w3.org/2000/svg','path');
+        path.setAttribute('d', `M ${x} ${y} L ${x2} ${y2}`);
+        path.setAttribute('fill','none');
+        path.setAttribute('stroke','url(#boltGrad)');
+        path.setAttribute('stroke-width','3');
+        path.setAttribute('class','branch');
+        branchesG.appendChild(path);
+      }
+    }
+    makeBranches();
+    const branches = Array.from(branchesG.querySelectorAll('.branch'));
+
+    // === 3) Prep stroke drawing ===
+    function prepPath(path){
+      const len = path.getTotalLength();
+      path.style.strokeDasharray = `${len} ${len}`;
+      path.style.strokeDashoffset = `${len}`;
+      return len;
+    }
+    [outlineO, outlineI, corona, core, coreCyan, coreBlue].forEach(prepPath);
+    const branchLens = branches.map(prepPath);
+
+    // === 4) Timeline ===
+    const tl = gsap.timeline({ defaults:{ ease:'power3.out' }});
+    gsap.set('#noise', { opacity:0.02 });
+
+    // Anticipation
+    tl.to('.stage', { x:-2, y:-2, duration:0.08, ease:'power2.inOut' }, 0);
+
+    // Color pre-flash stack
+    tl.to(flashB, { opacity:0.10, duration:0.05, ease:'power2.out' }, 0.02)
+      .to(flashB, { opacity:0, duration:0.12, ease:'power2.in' }, ">-0.02")
+      .to(flashC, { opacity:0.12, duration:0.05 }, 0.06)
+      .to(flashC, { opacity:0, duration:0.12 }, ">-0.02");
+
+    // Main strike
+    tl.addLabel('strike', ">")
+      .to([outlineO, outlineI], { strokeDashoffset:0, duration:0.14, ease:'power1.in' }, 'strike')
+      .to(core,   { strokeDashoffset:0, duration:0.16, ease:'power1.in' }, 'strike+=0.01')
+      .to(corona, { strokeDashoffset:0, duration:0.22, ease:'power1.in' }, 'strike+=0.03')
+      .to('#noise', { opacity:0.06, duration:0.2 }, 'strike');
+
+    // Branches
+    branches.forEach((b,i)=>{
+      tl.to(b, { strokeDashoffset:0, duration:0.10 + i*0.02, ease:'power1.in' }, 'strike+=0.05');
+    });
+
+    // Screen flashes + camera shake
+    tl.to(flashW, { opacity:0.98, duration:0.06, ease:'power4.out' }, 'strike+=0.02')
+      .to('.stage', { x:0, y:0, duration:0.05, ease:'power1.in' }, 'strike+=0.03')
+      .to('.stage', { x:6, y:-4, duration:0.06, ease:'power1.inOut' }, 'strike+=0.06')
+      .to('.stage', { x:-3, y:2, duration:0.08, ease:'power1.inOut' }, 'strike+=0.12')
+      .to('.stage', { x:0, y:0, duration:0.12, ease:'power2.out' }, 'strike+=0.18')
+      .to([flashC, flashB], { opacity:0.30, duration:0.14 }, 'strike+=0.12')
+      .to([flashW, flashC, flashB], { opacity:0.0, duration:0.30, ease:'power2.in' }, 'strike+=0.26');
+
+    // Chromatic sizzle (brief colored core ghosts)
+    tl.set(coreCyan, { opacity:0, x:1.2, y:-0.8 }, 'strike+=0.00')
+      .set(coreBlue, { opacity:0, x:-1.2, y:0.8 }, 'strike+=0.00')
+      .to(coreCyan, { strokeDashoffset:0, opacity:0.9, duration:0.10, ease:'power1.in' }, 'strike+=0.02')
+      .to(coreBlue, { strokeDashoffset:0, opacity:0.8, duration:0.10, ease:'power1.in' }, 'strike+=0.03')
+      .to([coreCyan, coreBlue], { opacity:0, duration:0.22, ease:'power1.out' }, 'strike+=0.18');
+
+    // Stars & shards
+    tl.to('#stars', { opacity:1, duration:0.08, ease:'power1.out' }, 'strike+=0.05')
+      .to('#stars', { opacity:0, duration:0.40 }, 'strike+=0.32')
+      .to('#shards', { opacity:1, duration:0.06 }, 'strike+=0.06')
+      .to('#shards', { opacity:0, duration:0.35 }, 'strike+=0.34');
+
+    // Linger + decay
+    tl.to([core,corona,outlineI,outlineO], { opacity:0.92, duration:0.05 }, 'strike+=0.02')
+      .to([core,corona], { opacity:0.65, duration:0.08 }, 'strike+=0.18')
+      .to([core,corona], { opacity:0.95, duration:0.05 }, 'strike+=0.26')
+      .to([core,corona,outlineI,outlineO], { opacity:0.0, duration:0.40, ease:'power2.in' }, 'strike+=0.52')
+      .to('#noise', { opacity:0.02, duration:0.5 }, 'strike+=0.34');
+
+    // Thunder (optional audio asset)
+    tl.call(()=>{ try{ if(thunder && thunder.play) thunder.play().catch(()=>{}); }catch(e){} }, null, 'strike+=0.30');
+
+    // Fade overlay & reveal site
+    tl.call(()=>{
+      overlay.style.transition = `opacity var(--fade-duration) ease`;
+      overlay.style.opacity = 0;
+      setTimeout(()=>{
+        overlay.setAttribute('hidden','true');
+        site.classList.add('ready');
+        if(ONCE_PER_SESSION) sessionStorage.setItem(STORAGE_KEY, '1');
+      }, 900);
+    }, null, ">+0.15");
+
+    // Safety reveal
+    setTimeout(()=>{
+      if(!overlay.hasAttribute('hidden')){
+        overlay.setAttribute('hidden','true');
+        site.classList.add('ready');
+        if(ONCE_PER_SESSION) sessionStorage.setItem(STORAGE_KEY, '1');
+      }
+    }, 5000);
+
+    function endIntroNow(){
+      tl.kill();
+      overlay.setAttribute('hidden','true');
+      site.classList.add('ready');
+      if(ONCE_PER_SESSION) sessionStorage.setItem(STORAGE_KEY, '1');
+    }
+
+    // Subtle shimmer loop
+    gsap.to('#noise', { opacity:0.045, duration:1.2, yoyo:true, repeat:-1, ease:'sine.inOut' });
+  })();
+  </script>
 </body>
 </html>
